@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vidIQ Partner Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .chart-container { position: relative; height: 280px; }
+    .chart-container-tall { position: relative; height: 360px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="32" height="32" rx="8" fill="#00C853"/>
+      <path d="M8 22L13 10h2l3 7 3-7h2l5 12h-2.5l-3.5-8.5L16 22h-2l-3.5-8.5L7 22H5z" fill="#fff"/>
+    </svg>
+    <div class="brand-text">vid<span>IQ</span> Partners</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Main</div>
+    <a href="index.html" class="active">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+    <a href="generator.html">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      Link Generator
+    </a>
+    <a href="#">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Analytics
+    </a>
+
+    <div class="sidebar-section">Manage</div>
+    <a href="#">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Customers
+    </a>
+    <a href="#">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Payouts
+    </a>
+    <a href="#">
+      <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    Powered by <a href="https://vidiq.com" style="color:#00C853">vidIQ</a> · Partner Program
+  </div>
+</aside>
+
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1>Partner Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <div class="partner-url">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        vidiq.com/yourivanhofwegen
+      </div>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode"></button>
+      <div class="avatar">YV</div>
+      <span style="font-weight:600;font-size:14px">Youri Van Hof Wegen</span>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">Total Earnings</div>
+        <div class="kpi-value" style="color:var(--green)">$100,632<span style="font-size:16px">.85</span></div>
+        <div class="kpi-change up">↑ 18.2% all time</div>
+      </div>
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">This Month</div>
+        <div class="kpi-value">$8,450<span style="font-size:16px">.00</span></div>
+        <div class="kpi-change up">↑ 3.0% vs last month</div>
+      </div>
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">Active Subscribers</div>
+        <div class="kpi-value">2,847</div>
+        <div class="kpi-change up">↑ 124 this month</div>
+      </div>
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">New Signups</div>
+        <div class="kpi-value">573</div>
+        <div class="kpi-change up">↑ 8.5% vs last month</div>
+      </div>
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">Conversion Rate</div>
+        <div class="kpi-value">7.6%</div>
+        <div class="kpi-change up">↑ 0.3pp vs last month</div>
+      </div>
+      <div class="kpi-card animate-in">
+        <div class="kpi-label">Churn Rate</div>
+        <div class="kpi-value" style="color:var(--danger)">3.2%</div>
+        <div class="kpi-change down">↑ 0.1pp vs last month</div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="charts-grid">
+      <div class="chart-card animate-in">
+        <h3>
+          Earnings Over Time
+          <span style="font-size:12px;color:var(--text-muted);font-weight:500">Last 12 months</span>
+        </h3>
+        <div class="chart-container">
+          <canvas id="earningsChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card animate-in">
+        <h3>
+          New vs Recurring Revenue
+          <span style="font-size:12px;color:var(--text-muted);font-weight:500">Monthly breakdown</span>
+        </h3>
+        <div class="chart-container">
+          <canvas id="revenueChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="charts-grid">
+      <div class="chart-card animate-in">
+        <h3>
+          Conversion Funnel
+          <span style="font-size:12px;color:var(--text-muted);font-weight:500">All time</span>
+        </h3>
+        <div id="funnelContainer" class="funnel"></div>
+      </div>
+      <div class="chart-card animate-in">
+        <h3>
+          Top Converting Content
+          <span style="font-size:12px;color:var(--text-muted);font-weight:500">By conversions</span>
+        </h3>
+        <div class="chart-container-tall">
+          <canvas id="contentChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Link Performance Table -->
+    <div class="table-section animate-in">
+      <div class="table-header">
+        <h3>Per-Video / Link Performance</h3>
+        <div class="table-actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV('linkTable','vidiq-link-performance.csv')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export CSV
+          </button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="linkTable">
+          <thead>
+            <tr>
+              <th data-sort="name">Video / Link Name <span class="sort-icon">↕</span></th>
+              <th data-sort="utm">UTM Source <span class="sort-icon">↕</span></th>
+              <th data-sort="clicks">Clicks <span class="sort-icon">↕</span></th>
+              <th data-sort="signups">Signups <span class="sort-icon">↕</span></th>
+              <th data-sort="conversions" class="sorted">Conversions <span class="sort-icon">↓</span></th>
+              <th data-sort="revenue">Revenue <span class="sort-icon">↕</span></th>
+              <th>Conv. Rate <span class="sort-icon" style="opacity:.3">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="linkTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Two-col: Customer Breakdown + Recent Feed -->
+    <div class="charts-grid">
+      <!-- Customer Breakdown -->
+      <div class="table-section animate-in" style="margin-bottom:0">
+        <div class="table-header">
+          <h3>Customer Breakdown</h3>
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV('customerTable','vidiq-customers.csv')">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export CSV
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table id="customerTable">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Count</th>
+                <th>MRR Contribution</th>
+                <th>% of Total</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Conversions Feed -->
+      <div class="table-section animate-in" style="margin-bottom:0">
+        <div class="table-header">
+          <h3>
+            Recent Conversions
+            <span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:var(--green);font-weight:600">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite"></span>
+              Live
+            </span>
+          </h3>
+        </div>
+        <div class="feed" id="feedContainer"></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Footer -->
+  <footer class="footer">
+    Powered by <a href="https://vidiq.com">vidIQ</a> · Partner Program &copy; 2025 · All data is for demonstration purposes
+  </footer>
+
+</div><!-- /main -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
