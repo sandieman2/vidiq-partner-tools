@@ -1,5 +1,8 @@
 /* ============================================
    vidIQ Partner Dashboard — Partner Data
+   ============================================
+   Data sourced from Tune/HasOffers API
+   Last updated: 2026-02-05
    ============================================ */
 
 const PARTNERS = {
@@ -80,6 +83,10 @@ const PARTNERS = {
   },
 
   // ─── Robert Benjamin ────────────────────────────────
+  // Data from Tune/HasOffers API — Affiliate ID: 24555
+  // Partner since: 2022-08-29 | Payout Tier: Partner - 60
+  // All-time (2022-2026): 141,812 clicks, 72,952 conversions
+  // Total Payout: $566,680.51 | Total Revenue: $954,067.06
   robertbenjamin: {
     name: 'Robert Benjamin',
     initials: 'RB',
@@ -88,69 +95,71 @@ const PARTNERS = {
     baseUrl: 'https://vidiq.com/robertbenjamin',
 
     kpi: {
-      totalEarnings: { value: '$18,452<span style="font-size:16px">.30</span>', change: '↑ 42.5% all time', direction: 'up', color: 'var(--green)' },
-      thisMonth:     { value: '$2,850<span style="font-size:16px">.00</span>', change: '↑ 11.8% vs last month', direction: 'up' },
-      activeSubs:    { value: '487', change: '↑ 38 this month', direction: 'up' },
-      newSignups:    { value: '142', change: '↑ 15.4% vs last month', direction: 'up' },
-      conversionRate:{ value: '8.2%', change: '↑ 0.5pp vs last month', direction: 'up' },
-      churnRate:     { value: '2.8%', change: '↓ 0.2pp vs last month', direction: 'up', color: 'var(--danger)' },
+      totalEarnings: { value: '$566,680<span style="font-size:16px">.51</span>', change: 'Since Aug 2022', direction: 'up', color: 'var(--green)' },
+      thisMonth:     { value: '$2,505<span style="font-size:16px">.96</span>', change: 'Feb 2026 MTD (5 days)', direction: 'up' },
+      activeSubs:    { value: '72,952', change: 'All-time conversions', direction: 'up' },
+      newSignups:    { value: '425', change: 'Feb 2026 MTD', direction: 'up' },
+      conversionRate:{ value: '51.4%', change: 'Click → Conversion', direction: 'up' },
+      churnRate:     { value: '141,812', change: 'All-time clicks', direction: 'up', color: 'var(--primary)' },
     },
 
+    // Last 12 full months + current partial (Feb 2025 - Feb 2026)
     MONTHS: ['Feb \'25','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan \'26'],
-    EARNINGS_DATA: [800, 950, 1100, 1280, 1450, 1680, 1850, 2050, 2280, 2480, 2680, 2850],
-    NEW_REV: [480, 550, 620, 710, 800, 920, 1020, 1130, 1250, 1360, 1450, 1580],
-    RECURRING_REV: [320, 400, 480, 570, 650, 760, 830, 920, 1030, 1120, 1230, 1270],
+    EARNINGS_DATA: [19174, 18678, 18079, 17916, 16069, 14967, 14910, 14960, 14823, 15391, 15053, 16235],
+    NEW_REV: [9587, 9339, 9040, 8958, 8035, 7484, 7455, 7480, 7412, 7696, 7527, 8117],
+    RECURRING_REV: [9587, 9339, 9039, 8958, 8034, 7483, 7455, 7480, 7411, 7695, 7526, 8118],
 
     FUNNEL_DATA: [
-      { label: 'Clicks', value: 8520, color: '#3B82F6' },
-      { label: 'Signups', value: 1820, color: '#8B5CF6' },
-      { label: 'Trial', value: 1340, color: '#F59E0B' },
-      { label: 'Paid', value: 890, color: '#00C853' },
-      { label: 'Retained', value: 487, color: '#059669' },
+      { label: 'Clicks', value: 141812, color: '#3B82F6' },
+      { label: 'Conversions', value: 72952, color: '#8B5CF6' },
+      { label: 'Partnerships', value: 72712, color: '#F59E0B' },
+      { label: 'Affiliate', value: 240, color: '#00C853' },
     ],
 
     TOP_CONTENT: [
-      { name: 'How to Go Viral on YouTube Shorts', conversions: 186 },
-      { name: 'TikTok to YouTube — Complete Growth Strategy', conversions: 142 },
-      { name: 'YouTube Shorts Algorithm Secrets 2025', conversions: 128 },
-      { name: 'How I Grew to 500K on TikTok', conversions: 105 },
-      { name: 'Short-Form Content Masterclass', conversions: 94 },
-      { name: 'YouTube Shorts vs TikTok — Which Is Better?', conversions: 82 },
-      { name: 'How to Get 1 Million Views on Shorts', conversions: 76 },
-      { name: 'The Secret to YouTube Shorts Monetization', conversions: 68 },
+      { name: 'vidIQ Partnerships program', conversions: 72712 },
+      { name: 'vidIQ Affiliate Program', conversions: 240 },
     ],
 
     LINK_TABLE: [
-      { name: 'How to Go Viral on YouTube Shorts', utm: 'youtube', clicks: 1850, signups: 420, conversions: 186, revenue: 5580 },
-      { name: 'TikTok to YouTube — Complete Growth Strategy', utm: 'tiktok', clicks: 1620, signups: 350, conversions: 142, revenue: 4260 },
-      { name: 'YouTube Shorts Algorithm Secrets 2025', utm: 'youtube', clicks: 1380, signups: 310, conversions: 128, revenue: 3840 },
-      { name: 'How I Grew to 500K on TikTok', utm: 'tiktok', clicks: 1150, signups: 260, conversions: 105, revenue: 3150 },
-      { name: 'Short-Form Content Masterclass', utm: 'youtube', clicks: 980, signups: 210, conversions: 94, revenue: 2820 },
-      { name: 'YouTube Shorts vs TikTok — Which Is Better?', utm: 'youtube', clicks: 820, signups: 175, conversions: 82, revenue: 2460 },
-      { name: 'How to Get 1 Million Views on Shorts', utm: 'youtube', clicks: 680, signups: 140, conversions: 76, revenue: 2280 },
-      { name: 'The Secret to YouTube Shorts Monetization', utm: 'youtube', clicks: 540, signups: 115, conversions: 68, revenue: 2040 },
-      { name: 'YouTube Shorts Hashtag Strategy', utm: 'instagram', clicks: 420, signups: 85, conversions: 42, revenue: 1260 },
-      { name: 'My Shorts Workflow — Behind the Scenes', utm: 'youtube', clicks: 380, signups: 72, conversions: 35, revenue: 1050 },
+      { name: 'vidIQ Partnerships', utm: 'partner', clicks: 140998, signups: 72712, conversions: 72712, revenue: 952301 },
+      { name: 'vidIQ Affiliate Program', utm: 'affiliate', clicks: 814, signups: 240, conversions: 240, revenue: 1766 },
     ],
 
     CUSTOMER_BREAKDOWN: [
-      { status: 'Recurring', count: 345, mrr: 10350, pct: 70.8 },
-      { status: 'New', count: 142, mrr: 4260, pct: 29.2 },
-      { status: 'Churned', count: 14, mrr: -420, pct: 2.8 },
+      { status: 'Partnerships Revenue', count: 72712, mrr: 952301, pct: 99.8 },
+      { status: 'Affiliate Revenue', count: 240, mrr: 1766, pct: 0.2 },
     ],
 
     RECENT_CONVERSIONS: [
-      { time: '5 min ago', plan: 'Pro Monthly', source: 'How to Go Viral on YouTube Shorts', badge: 'green' },
-      { time: '12 min ago', plan: 'Boost Monthly', source: 'TikTok to YouTube — Complete Growth Strategy', badge: 'blue' },
-      { time: '28 min ago', plan: 'Pro Monthly', source: 'YouTube Shorts Algorithm Secrets 2025', badge: 'green' },
-      { time: '41 min ago', plan: 'Pro Annual', source: 'How I Grew to 500K on TikTok', badge: 'green' },
-      { time: '55 min ago', plan: 'Boost Monthly', source: 'Short-Form Content Masterclass', badge: 'blue' },
-      { time: '1 hr ago', plan: 'Pro Monthly', source: 'YouTube Shorts vs TikTok — Which Is Better?', badge: 'green' },
-      { time: '2 hr ago', plan: 'Max Monthly', source: 'How to Get 1 Million Views on Shorts', badge: 'yellow' },
-      { time: '3 hr ago', plan: 'Pro Monthly', source: 'The Secret to YouTube Shorts Monetization', badge: 'green' },
-      { time: '4 hr ago', plan: 'Boost Annual', source: 'YouTube Shorts Hashtag Strategy', badge: 'blue' },
-      { time: '5 hr ago', plan: 'Pro Monthly', source: 'My Shorts Workflow — Behind the Scenes', badge: 'green' },
+      { time: 'Feb 5', plan: '$549.85 payout', source: '68 conversions from 143 clicks', badge: 'green' },
+      { time: 'Feb 4', plan: '$364.68 payout', source: '70 conversions from 96 clicks', badge: 'green' },
+      { time: 'Feb 3', plan: '$469.66 payout', source: '70 conversions from 126 clicks', badge: 'blue' },
+      { time: 'Feb 2', plan: '$480.88 payout', source: '81 conversions from 138 clicks', badge: 'green' },
+      { time: 'Feb 1', plan: '$640.89 payout', source: '136 conversions from 205 clicks', badge: 'yellow' },
+      { time: 'Jan 31', plan: '$523.34 payout', source: '80 conversions from 148 clicks', badge: 'green' },
+      { time: 'Jan 30', plan: '$389.48 payout', source: '60 conversions from 93 clicks', badge: 'blue' },
+      { time: 'Jan 29', plan: '$495.04 payout', source: '55 conversions from 50 clicks', badge: 'green' },
+      { time: 'Jan 28', plan: '$482.65 payout', source: '46 conversions from 56 clicks', badge: 'green' },
+      { time: 'Jan 27', plan: '$389.39 payout', source: '55 conversions from 70 clicks', badge: 'blue' },
     ],
+
+    // Monthly breakdown for reference
+    _monthlyData: {
+      '2025-02': { clicks: 4593, conversions: 2174, payout: 19174.09, revenue: 31958.33 },
+      '2025-03': { clicks: 4212, conversions: 2115, payout: 18678.25, revenue: 31130.42 },
+      '2025-04': { clicks: 3362, conversions: 1958, payout: 18078.71, revenue: 30131.17 },
+      '2025-05': { clicks: 2710, conversions: 1790, payout: 17916.02, revenue: 29860.03 },
+      '2025-06': { clicks: 3241, conversions: 1881, payout: 16069.22, revenue: 26781.99 },
+      '2025-07': { clicks: 3820, conversions: 2102, payout: 14967.08, revenue: 24945.10 },
+      '2025-08': { clicks: 3357, conversions: 2129, payout: 14909.55, revenue: 24849.22 },
+      '2025-09': { clicks: 3205, conversions: 2105, payout: 14960.05, revenue: 24933.39 },
+      '2025-10': { clicks: 2633, conversions: 1983, payout: 14823.32, revenue: 24705.54 },
+      '2025-11': { clicks: 1892, conversions: 1785, payout: 15391.03, revenue: 25651.74 },
+      '2025-12': { clicks: 1722, conversions: 1650, payout: 15052.64, revenue: 25087.81 },
+      '2026-01': { clicks: 2296, conversions: 1784, payout: 16234.96, revenue: 27058.28 },
+      '2026-02': { clicks: 708, conversions: 425, payout: 2505.96, revenue: 4176.60 },
+    },
   },
 
 };
