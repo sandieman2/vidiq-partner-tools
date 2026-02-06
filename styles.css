@@ -356,25 +356,9 @@ a:hover { text-decoration: underline; }
 }
 .chart-card canvas { width: 100% !important; }
 
-/* ---------- Funnel ---------- */
-.funnel { display: flex; flex-direction: column; gap: 10px; padding: 8px 0; }
-.funnel-step {
-  display: flex; align-items: center; gap: 12px;
-}
-.funnel-bar-wrap { flex: 1; position: relative; height: 40px; }
-.funnel-bar {
-  height: 100%; border-radius: 6px;
-  display: flex; align-items: center; padding: 0 14px;
-  font-weight: 700; color: #fff; font-size: 14px;
-  transition: width .8s cubic-bezier(.22,1,.36,1);
-}
-.funnel-label {
-  width: 80px; font-size: 13px; font-weight: 600; color: var(--text-secondary);
-  text-align: right; flex-shrink: 0;
-}
-.funnel-pct {
-  font-size: 12px; font-weight: 600; color: var(--text-muted);
-  width: 50px; flex-shrink: 0;
+/* ---------- Single column chart grid ---------- */
+.charts-grid-single {
+  grid-template-columns: 1fr;
 }
 
 /* ---------- Tables ---------- */
@@ -426,29 +410,19 @@ tbody tr:hover { background: var(--green-glow); }
 [data-theme="dark"] .badge-red { background: rgba(220,38,38,.15); }
 [data-theme="dark"] .badge-yellow { background: rgba(217,119,6,.15); }
 
-/* ---------- Recent Feed ---------- */
-.feed { padding: 0; }
-.feed-item {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--card-border);
-  transition: background var(--transition);
+/* ---------- Recent Conversions Table ---------- */
+.row-today td {
+  background: var(--green-glow);
+  font-weight: 600;
 }
-.feed-item:last-child { border-bottom: none; }
-.feed-item:hover { background: var(--green-glow); }
-.feed-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--green); flex-shrink: 0;
-  animation: pulse 2s infinite;
+.row-today td:first-child {
+  border-left: 3px solid var(--green);
 }
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .4; }
 }
-.feed-info { flex: 1; }
-.feed-info strong { font-weight: 600; }
-.feed-time { font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
-.feed-plan { font-size: 12px; }
 
 /* ---------- Buttons ---------- */
 .btn {

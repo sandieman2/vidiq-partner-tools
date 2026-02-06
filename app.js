@@ -1,6 +1,7 @@
 /* ============================================
-   vidIQ Partner Dashboard — App Logic (v4)
-   Timeframe-aware filtering
+   vidIQ Partner Dashboard — App Logic (v5)
+   Polished: removed funnel/customer breakdown,
+   fixed recent conversions, partial month handling
    ============================================ */
 
 // ---------- Active partner ----------
@@ -27,8 +28,8 @@ function buildDefaultPartner() {
       churnRate: { value: '—', change: '—', direction: 'down' },
     },
     MONTHS: [], EARNINGS_DATA: [], NEW_REV: [], RECURRING_REV: [],
-    FUNNEL_DATA: [], TOP_CONTENT: [], LINK_TABLE: [],
-    CUSTOMER_BREAKDOWN: [], RECENT_CONVERSIONS: [],
+    TOP_CONTENT: [], LINK_TABLE: [],
+    RECENT_CONVERSIONS: [],
   };
 }
 
@@ -162,7 +163,7 @@ function getDateRange() {
       break;
     case 'all':
     default:
-      return null; // null means no filter
+      return null;
   }
   return { from, to };
 }
@@ -170,16 +171,15 @@ function getDateRange() {
 function filterDailyData() {
   if (!hasDailyData()) return null;
   const range = getDateRange();
-  if (!range) return PARTNER.DAILY_DATA; // all data
+  if (!range) return PARTNER.DAILY_DATA;
   return PARTNER.DAILY_DATA.filter(d => {
     const dt = new Date(d.date + 'T00:00:00');
     return dt >= range.from && dt <= range.to;
   });
 }
 
-// Aggregate daily data into buckets (day, week, month) based on range size
 function aggregateForChart(dailyData) {
-  if (!dailyData || dailyData.length === 0) return { labels: [], payouts: [], revenues: [] };
+  if (!dailyData || dailyData.length === 0) return { labels: [], payouts: [], revenues: [], isPartial: [] };
 
   const days = dailyData.length;
   let mode = 'day';
@@ -187,13 +187,13 @@ function aggregateForChart(dailyData) {
   else if (days > 31) mode = 'week';
 
   const buckets = {};
+  const bucketOrder = [];
 
   dailyData.forEach(d => {
     let key;
     if (mode === 'day') {
-      key = d.date; // YYYY-MM-DD
+      key = d.date;
     } else if (mode === 'week') {
-      // Week starting Monday
       const dt = new Date(d.date + 'T00:00:00');
       const day = dt.getDay();
       const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
@@ -201,34 +201,49 @@ function aggregateForChart(dailyData) {
       monday.setDate(diff);
       key = 'W ' + monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } else {
-      key = d.date.substring(0, 7); // YYYY-MM
+      key = d.date.substring(0, 7);
     }
 
-    if (!buckets[key]) buckets[key] = { payout: 0, revenue: 0, clicks: 0, conversions: 0 };
+    if (!buckets[key]) {
+      buckets[key] = { payout: 0, revenue: 0, clicks: 0, conversions: 0, days: 0 };
+      bucketOrder.push(key);
+    }
     buckets[key].payout += d.payout;
     buckets[key].revenue += d.revenue;
     buckets[key].clicks += d.clicks;
     buckets[key].conversions += d.conversions;
+    buckets[key].days += 1;
   });
 
-  // Sort keys
-  const sortedKeys = Object.keys(buckets);
-  if (mode === 'day') {
-    sortedKeys.sort();
-  } else if (mode === 'month') {
+  const sortedKeys = bucketOrder;
+  if (mode === 'day' || mode === 'month') {
     sortedKeys.sort();
   }
-  // Week keys are already in order from the sorted daily data
 
-  // Format labels nicely
-  const labels = sortedKeys.map(k => {
+  // Detect partial current month
+  const now = new Date();
+  const currentMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  const isPartial = sortedKeys.map(k => {
+    if (mode === 'month' && k === currentMonthKey) {
+      return buckets[k].days < daysInCurrentMonth;
+    }
+    return false;
+  });
+
+  const labels = sortedKeys.map((k, i) => {
     if (mode === 'day') {
       const dt = new Date(k + 'T00:00:00');
       return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     } else if (mode === 'month') {
       const parts = k.split('-');
       const dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
-      return dt.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      let label = dt.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      if (isPartial[i]) {
+        label += ' (MTD)';
+      }
+      return label;
     }
     return k;
   });
@@ -239,6 +254,8 @@ function aggregateForChart(dailyData) {
     revenues: sortedKeys.map(k => Math.round(buckets[k].revenue * 100) / 100),
     clicks: sortedKeys.map(k => buckets[k].clicks),
     conversions: sortedKeys.map(k => buckets[k].conversions),
+    isPartial,
+    bucketDays: sortedKeys.map(k => buckets[k].days),
   };
 }
 
@@ -257,6 +274,47 @@ function computeFilteredTotals(dailyData) {
 }
 
 // ============================================================
+//  PARTIAL MONTH HELPERS
+// ============================================================
+
+function getCurrentMonthInfo() {
+  if (!hasDailyData()) return null;
+  const now = new Date();
+  const yearMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  const monthName = now.toLocaleDateString('en-US', { month: 'short' });
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+  // Count how many days of data we have for the current month
+  const currentMonthData = PARTNER.DAILY_DATA.filter(d => d.date.startsWith(yearMonth));
+  const daysWithData = currentMonthData.length;
+
+  return {
+    yearMonth,
+    monthName,
+    daysInMonth,
+    daysWithData,
+    isPartial: daysWithData < daysInMonth,
+    data: currentMonthData,
+  };
+}
+
+function getLastMonthInfo() {
+  if (!hasDailyData()) return null;
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const yearMonth = lastMonth.getFullYear() + '-' + String(lastMonth.getMonth() + 1).padStart(2, '0');
+  const monthName = lastMonth.toLocaleDateString('en-US', { month: 'short' });
+
+  const lastMonthData = PARTNER.DAILY_DATA.filter(d => d.date.startsWith(yearMonth));
+
+  return {
+    yearMonth,
+    monthName,
+    data: lastMonthData,
+  };
+}
+
+// ============================================================
 //  TIMEFRAME UI
 // ============================================================
 
@@ -264,13 +322,11 @@ function initTimeframeUI() {
   const bar = document.getElementById('timeframeBar');
   if (!bar) return;
 
-  // Show/hide based on whether we're on the dashboard page
   if (!document.getElementById('earningsChart')) {
     bar.style.display = 'none';
     return;
   }
 
-  // Setup pill clicks
   const pills = document.querySelectorAll('.tf-pill');
   pills.forEach(pill => {
     pill.addEventListener('click', () => {
@@ -282,7 +338,6 @@ function initTimeframeUI() {
 
       if (range === 'custom') {
         customEl.style.display = 'flex';
-        // Don't apply yet — wait for Apply button
         return;
       } else {
         customEl.style.display = 'none';
@@ -295,7 +350,6 @@ function initTimeframeUI() {
     });
   });
 
-  // Apply button for custom range
   const applyBtn = document.getElementById('tfApplyBtn');
   if (applyBtn) {
     applyBtn.addEventListener('click', () => {
@@ -316,7 +370,6 @@ function initTimeframeUI() {
     });
   }
 
-  // Set date input bounds from daily data
   if (hasDailyData()) {
     const data = PARTNER.DAILY_DATA;
     const minDate = data[0].date;
@@ -327,13 +380,11 @@ function initTimeframeUI() {
     if (toInput) { toInput.min = minDate; toInput.max = maxDate; }
   }
 
-  // Show notice for partners without daily data
   const notice = document.getElementById('tfNotice');
   if (notice) {
     notice.style.display = hasDailyData() ? 'none' : 'flex';
   }
 
-  // If no daily data, disable all pills except All
   if (!hasDailyData()) {
     pills.forEach(p => {
       if (p.dataset.range !== 'all') {
@@ -360,11 +411,11 @@ function updateSummaryText() {
 
   const range = getDateRange();
   if (!range) {
-    el.textContent = `${filtered.length} days · All data`;
+    el.textContent = filtered.length + ' days · All data';
   } else {
     const fromStr = range.from.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const toStr = range.to.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    el.textContent = `${filtered.length} days · ${fromStr} — ${toStr}`;
+    el.textContent = filtered.length + ' days · ' + fromStr + ' — ' + toStr;
   }
 }
 
@@ -380,15 +431,12 @@ function applyTimeframe() {
 function populatePartnerUI() {
   if (!PARTNER) return;
 
-  // Header: avatar initials
   const avatar = document.querySelector('.header-right .avatar');
   if (avatar) avatar.textContent = PARTNER.initials;
 
-  // Header: partner name
   const nameEl = document.querySelector('.header-right > span');
   if (nameEl) nameEl.textContent = PARTNER.name;
 
-  // Header: partner URL text
   const urlEl = document.querySelector('.partner-url');
   if (urlEl) {
     const textNodes = Array.from(urlEl.childNodes).filter(n => n.nodeType === Node.TEXT_NODE);
@@ -396,10 +444,8 @@ function populatePartnerUI() {
     urlEl.appendChild(document.createTextNode('\n        ' + PARTNER.url + '\n      '));
   }
 
-  // Page title
   document.title = PARTNER.name + ' — vidIQ Partner Dashboard';
 
-  // Sidebar nav: preserve partner param on links
   const slug = getPartnerSlug();
   document.querySelectorAll('.sidebar-nav a').forEach(a => {
     const href = a.getAttribute('href');
@@ -416,15 +462,13 @@ function renderKPIs() {
   const kpiGrid = document.querySelector('.kpi-grid');
   if (!kpiGrid || !PARTNER) return;
 
-  // If we have daily data and a filter is active, compute filtered KPIs
   if (hasDailyData()) {
     const filtered = filterDailyData();
     const totals = computeFilteredTotals(filtered);
     const isAll = currentTimeframe.range === 'all';
 
-    // For "all time" mode, use the original static KPI (includes pre-daily-data history)
     if (isAll) {
-      renderStaticKPIs(kpiGrid);
+      renderSmartKPIs(kpiGrid);
     } else {
       const convRate = totals.clicks > 0 ? ((totals.conversions / totals.clicks) * 100).toFixed(1) : '0';
       const avgDaily = totals.days > 0 ? (totals.payout / totals.days).toFixed(2) : '0';
@@ -472,17 +516,78 @@ function renderKPIs() {
       ];
 
       kpiGrid.innerHTML = filteredKPIs.map(k => {
-        const colorStyle = k.color ? ` style="color:${k.color}"` : '';
-        return `<div class="kpi-card animate-in">
-          <div class="kpi-label">${k.label}</div>
-          <div class="kpi-value"${colorStyle}>${k.value}</div>
-          <div class="kpi-change ${k.direction}">${k.change}</div>
-        </div>`;
+        const colorStyle = k.color ? ' style="color:' + k.color + '"' : '';
+        return '<div class="kpi-card animate-in">' +
+          '<div class="kpi-label">' + k.label + '</div>' +
+          '<div class="kpi-value"' + colorStyle + '>' + k.value + '</div>' +
+          '<div class="kpi-change ' + k.direction + '">' + k.change + '</div>' +
+        '</div>';
       }).join('');
     }
   } else {
     renderStaticKPIs(kpiGrid);
   }
+}
+
+/**
+ * Smart KPIs: for "all time" view with daily data, fix misleading partial-month comparisons
+ */
+function renderSmartKPIs(kpiGrid) {
+  if (!PARTNER.kpi) return;
+
+  const cmInfo = getCurrentMonthInfo();
+  const lmInfo = getLastMonthInfo();
+
+  // Build smart KPI overrides
+  const kpiOrder = ['totalEarnings', 'thisMonth', 'activeSubs', 'newSignups', 'conversionRate', 'churnRate'];
+  const kpiLabels = {
+    totalEarnings: 'Total Earnings',
+    thisMonth: 'This Month',
+    activeSubs: 'Total Conversions',
+    newSignups: 'Conversions This Month',
+    conversionRate: 'Conversion Rate',
+    churnRate: 'Overall Conv. Rate',
+  };
+
+  kpiGrid.innerHTML = kpiOrder.map(key => {
+    const k = PARTNER.kpi[key];
+    if (!k) return '';
+
+    let label = k.label || kpiLabels[key];
+    let value = k.value;
+    let change = k.change;
+    let direction = k.direction;
+
+    // Fix "This Month" KPI — show MTD context
+    if (key === 'thisMonth' && cmInfo && cmInfo.isPartial) {
+      const cmTotals = computeFilteredTotals(cmInfo.data);
+      label = cmInfo.monthName + ' MTD (' + cmInfo.daysWithData + ' days)';
+      value = '$' + formatMoney(cmTotals.payout);
+      // Calculate daily run rate and project
+      const dailyRate = cmTotals.payout / cmInfo.daysWithData;
+      const projected = dailyRate * cmInfo.daysInMonth;
+      change = 'Projected: ~$' + Math.round(projected).toLocaleString() + '/mo';
+      direction = 'up';
+    }
+
+    // Fix "Conversions This Month" — show MTD context
+    if (key === 'newSignups' && cmInfo && cmInfo.isPartial) {
+      const cmTotals = computeFilteredTotals(cmInfo.data);
+      label = 'Conversions · ' + cmInfo.monthName + ' MTD';
+      value = cmTotals.conversions.toLocaleString();
+      const dailyRate = cmTotals.conversions / cmInfo.daysWithData;
+      const projected = Math.round(dailyRate * cmInfo.daysInMonth);
+      change = 'Projected: ~' + projected.toLocaleString() + '/mo';
+      direction = 'up';
+    }
+
+    const colorStyle = k.color ? ' style="color:' + k.color + '"' : '';
+    return '<div class="kpi-card animate-in">' +
+      '<div class="kpi-label">' + label + '</div>' +
+      '<div class="kpi-value"' + colorStyle + '>' + value + '</div>' +
+      '<div class="kpi-change ' + direction + '">' + change + '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function renderStaticKPIs(kpiGrid) {
@@ -499,13 +604,13 @@ function renderStaticKPIs(kpiGrid) {
   kpiGrid.innerHTML = kpiOrder.map(key => {
     const k = PARTNER.kpi[key];
     if (!k) return '';
-    const colorStyle = k.color ? ` style="color:${k.color}"` : '';
+    const colorStyle = k.color ? ' style="color:' + k.color + '"' : '';
     const label = k.label || kpiLabels[key];
-    return `<div class="kpi-card animate-in">
-      <div class="kpi-label">${label}</div>
-      <div class="kpi-value"${colorStyle}>${k.value}</div>
-      <div class="kpi-change ${k.direction}">${k.change}</div>
-    </div>`;
+    return '<div class="kpi-card animate-in">' +
+      '<div class="kpi-label">' + label + '</div>' +
+      '<div class="kpi-value"' + colorStyle + '>' + k.value + '</div>' +
+      '<div class="kpi-change ' + k.direction + '">' + k.change + '</div>' +
+    '</div>';
   }).join('');
 }
 
@@ -540,13 +645,11 @@ let chartInstances = {};
 function renderCharts() {
   if (!PARTNER) return;
 
-  // Destroy existing
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
 
   const t = getThemeColors();
 
-  // Determine data source
   let chartData;
   let useFiltered = hasDailyData() && currentTimeframe.range !== 'all';
 
@@ -555,14 +658,14 @@ function renderCharts() {
     chartData = aggregateForChart(filtered);
   }
 
-  // 1. Earnings Over Time
+  // 1. Earnings Over Time — with partial month dashed line
   const ctx1 = document.getElementById('earningsChart');
   if (ctx1) {
     const defs = chartDefaults();
     const labels = useFiltered || hasDailyData() ? chartData.labels : PARTNER.MONTHS;
     const data = useFiltered || hasDailyData() ? chartData.payouts : PARTNER.EARNINGS_DATA;
+    const isPartial = chartData ? chartData.isPartial : [];
 
-    // Update chart subtitle
     const chartCard = ctx1.closest('.chart-card');
     if (chartCard) {
       const subtitle = chartCard.querySelector('h3 span');
@@ -571,34 +674,72 @@ function renderCharts() {
       }
     }
 
+    // Split data into complete and partial segments for dashed line effect
+    const hasPartial = isPartial.length > 0 && isPartial[isPartial.length - 1];
+    let completeData = data;
+    let partialData = new Array(data.length).fill(null);
+
+    if (hasPartial) {
+      completeData = data.map((v, i) => isPartial[i] ? null : v);
+      // Connect the last complete point to the partial point
+      const lastCompleteIdx = completeData.length - 2;
+      partialData = data.map((v, i) => {
+        if (i === lastCompleteIdx) return v; // bridge point
+        if (isPartial[i]) return v;
+        return null;
+      });
+    }
+
+    const datasets = [{
+      label: hasDailyData() ? 'Payout ($)' : 'Monthly Earnings ($)',
+      data: completeData,
+      borderColor: '#00C853',
+      backgroundColor: 'rgba(0,200,83,.08)',
+      borderWidth: 2.5,
+      fill: true,
+      tension: .35,
+      pointRadius: data.length > 60 ? 0 : data.length > 30 ? 2 : 4,
+      pointBackgroundColor: '#00C853',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointHoverRadius: 6,
+      spanGaps: false,
+    }];
+
+    if (hasPartial) {
+      datasets.push({
+        label: 'Current Month (MTD)',
+        data: partialData,
+        borderColor: '#00C853',
+        backgroundColor: 'rgba(0,200,83,.04)',
+        borderWidth: 2.5,
+        borderDash: [6, 4],
+        fill: true,
+        tension: .35,
+        pointRadius: 5,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#00C853',
+        pointBorderWidth: 2.5,
+        pointHoverRadius: 7,
+        spanGaps: true,
+      });
+    }
+
     chartInstances.earnings = new Chart(ctx1.getContext('2d'), {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: hasDailyData() ? 'Payout ($)' : 'Monthly Earnings ($)',
-          data: data,
-          borderColor: '#00C853',
-          backgroundColor: 'rgba(0,200,83,.08)',
-          borderWidth: 2.5,
-          fill: true,
-          tension: .35,
-          pointRadius: data.length > 60 ? 0 : data.length > 30 ? 2 : 4,
-          pointBackgroundColor: '#00C853',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointHoverRadius: 6,
-        }]
-      },
+      data: { labels: labels, datasets: datasets },
       options: {
         ...defs,
         plugins: {
           ...defs.plugins,
-          legend: { display: false },
+          legend: { display: hasPartial, labels: { ...defs.plugins.legend.labels, filter: function(item) { return true; } } },
           tooltip: {
             ...defs.plugins.tooltip,
             callbacks: {
-              label: ctx => '$' + ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+              label: function(ctx) {
+                if (ctx.parsed.y === null) return null;
+                return ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+              },
             }
           }
         },
@@ -616,6 +757,7 @@ function renderCharts() {
   if (ctx2) {
     const defs = chartDefaults();
     let labels, datasets;
+    const isPartial = chartData ? chartData.isPartial : [];
 
     if (hasDailyData()) {
       labels = chartData.labels;
@@ -623,16 +765,40 @@ function renderCharts() {
       if (chartCard) {
         const h3 = chartCard.querySelector('h3');
         const subtitle = h3.querySelector('span');
-        // Update title text for daily data partners
         const titleText = h3.childNodes[0];
         if (titleText && titleText.nodeType === Node.TEXT_NODE) {
           titleText.textContent = 'Payout vs Revenue\n          ';
         }
         if (subtitle) subtitle.textContent = getTimeframeLabel();
       }
+
+      // Add subtle pattern for partial months
+      const payoutBg = chartData.payouts.map((v, i) => isPartial[i] ? 'rgba(59, 130, 246, 0.5)' : '#3B82F6');
+      const revenueBg = chartData.revenues.map((v, i) => isPartial[i] ? 'rgba(0, 200, 83, 0.5)' : '#00C853');
+      const payoutBorder = chartData.payouts.map((v, i) => isPartial[i] ? '#3B82F6' : 'transparent');
+      const revenueBorder = chartData.revenues.map((v, i) => isPartial[i] ? '#00C853' : 'transparent');
+
       datasets = [
-        { label: 'Payout (Your Earnings)', data: chartData.payouts, backgroundColor: '#3B82F6', borderRadius: 4, barPercentage: .65 },
-        { label: 'Revenue (vidIQ Total)', data: chartData.revenues, backgroundColor: '#00C853', borderRadius: 4, barPercentage: .65 },
+        {
+          label: 'Payout (Your Earnings)',
+          data: chartData.payouts,
+          backgroundColor: payoutBg,
+          borderColor: payoutBorder,
+          borderWidth: isPartial.some(Boolean) ? 2 : 0,
+          borderDash: [4, 3],
+          borderRadius: 4,
+          barPercentage: .65,
+        },
+        {
+          label: 'Revenue (vidIQ Total)',
+          data: chartData.revenues,
+          backgroundColor: revenueBg,
+          borderColor: revenueBorder,
+          borderWidth: isPartial.some(Boolean) ? 2 : 0,
+          borderDash: [4, 3],
+          borderRadius: 4,
+          barPercentage: .65,
+        },
       ];
     } else {
       labels = PARTNER.MONTHS;
@@ -653,6 +819,14 @@ function renderCharts() {
             ...defs.plugins.tooltip,
             callbacks: {
               label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+              afterBody: function(tooltipItems) {
+                if (!isPartial.length) return '';
+                const idx = tooltipItems[0].dataIndex;
+                if (isPartial[idx] && chartData) {
+                  return '⚠ Partial month (' + chartData.bucketDays[idx] + ' days)';
+                }
+                return '';
+              }
             }
           }
         },
@@ -665,14 +839,11 @@ function renderCharts() {
     });
   }
 
-  // 3. Funnel
-  renderFunnel();
-
-  // 4. Top Converting Content
+  // 3. Top Converting Content
   const ctx4 = document.getElementById('contentChart');
   if (ctx4) {
     const defs = chartDefaults();
-    const labels = PARTNER.TOP_CONTENT.map(d => d.name.length > 30 ? d.name.slice(0, 30) + '…' : d.name);
+    const labels = PARTNER.TOP_CONTENT.map(d => d.name.length > 40 ? d.name.slice(0, 40) + '…' : d.name);
     chartInstances.content = new Chart(ctx4.getContext('2d'), {
       type: 'bar',
       data: {
@@ -684,7 +855,7 @@ function renderCharts() {
             const colors = ['#00C853','#00A344','#059669','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
             return colors[i % colors.length];
           }),
-          borderRadius: 4,
+          borderRadius: 6,
           barPercentage: .7,
         }]
       },
@@ -701,48 +872,6 @@ function renderCharts() {
   }
 }
 
-function renderFunnel() {
-  const el = document.getElementById('funnelContainer');
-  if (!el || !PARTNER) return;
-
-  let funnelData = PARTNER.FUNNEL_DATA;
-
-  // If filtered and daily data available, build dynamic funnel
-  if (hasDailyData() && currentTimeframe.range !== 'all') {
-    const filtered = filterDailyData();
-    const totals = computeFilteredTotals(filtered);
-    funnelData = [
-      { label: 'Clicks', value: totals.clicks, color: '#3B82F6' },
-      { label: 'Conversions', value: totals.conversions, color: '#8B5CF6' },
-      { label: 'Payout', value: Math.round(totals.payout), color: '#00C853' },
-    ];
-  }
-
-  // Update funnel subtitle
-  const chartCard = el.closest('.chart-card');
-  if (chartCard) {
-    const subtitle = chartCard.querySelector('h3 span');
-    if (subtitle) {
-      subtitle.textContent = hasDailyData() ? getTimeframeLabel() : 'All time';
-    }
-  }
-
-  const max = funnelData[0]?.value || 1;
-  el.innerHTML = funnelData.map((d, i) => {
-    const pct = (d.value / max * 100).toFixed(1);
-    const convRate = i === 0 ? '100%' : (d.value / funnelData[i - 1].value * 100).toFixed(1) + '%';
-    const displayVal = d.label === 'Payout' ? '$' + d.value.toLocaleString() : d.value.toLocaleString();
-    return `
-      <div class="funnel-step animate-in" style="animation-delay:${i * .1}s">
-        <span class="funnel-label">${d.label}</span>
-        <div class="funnel-bar-wrap">
-          <div class="funnel-bar" style="width:${pct}%;background:${d.color}">${displayVal}</div>
-        </div>
-        <span class="funnel-pct">${convRate}</span>
-      </div>`;
-  }).join('');
-}
-
 // ---------- Tables ----------
 function renderLinkTable(sortKey = 'conversions', sortDir = 'desc') {
   const tbody = document.getElementById('linkTableBody');
@@ -755,81 +884,65 @@ function renderLinkTable(sortKey = 'conversions', sortDir = 'desc') {
   });
 
   tbody.innerHTML = sorted.map(r => {
-    const rate = ((r.conversions / r.clicks) * 100).toFixed(1);
-    return `<tr>
-      <td><strong>${r.name}</strong></td>
-      <td><span class="badge badge-blue">${r.utm}</span></td>
-      <td>${r.clicks.toLocaleString()}</td>
-      <td>${r.signups.toLocaleString()}</td>
-      <td>${r.conversions.toLocaleString()}</td>
-      <td>$${r.revenue.toLocaleString()}</td>
-      <td><strong>${rate}%</strong></td>
-    </tr>`;
+    const rate = r.clicks > 0 ? ((r.conversions / r.clicks) * 100).toFixed(1) : '0.0';
+    return '<tr>' +
+      '<td><strong>' + r.name + '</strong></td>' +
+      '<td><span class="badge badge-blue">' + r.utm + '</span></td>' +
+      '<td>' + r.clicks.toLocaleString() + '</td>' +
+      '<td>' + r.signups.toLocaleString() + '</td>' +
+      '<td>' + r.conversions.toLocaleString() + '</td>' +
+      '<td>$' + r.revenue.toLocaleString() + '</td>' +
+      '<td><strong>' + rate + '%</strong></td>' +
+    '</tr>';
   }).join('');
 }
 
-function renderCustomerTable() {
-  const tbody = document.getElementById('customerTableBody');
+// ---------- Recent Conversions (from DAILY_DATA) ----------
+function renderRecentConversions() {
+  const tbody = document.getElementById('recentConversionsBody');
   if (!tbody || !PARTNER) return;
 
-  let breakdown = PARTNER.CUSTOMER_BREAKDOWN;
+  if (hasDailyData()) {
+    // Get last 14 days of data
+    const recentDays = PARTNER.DAILY_DATA.slice(-14).reverse();
 
-  // For filtered daily data, show period totals
-  if (hasDailyData() && currentTimeframe.range !== 'all') {
-    const filtered = filterDailyData();
-    const totals = computeFilteredTotals(filtered);
-    breakdown = [
-      { status: 'Period Payout', count: totals.conversions, mrr: Math.round(totals.payout), pct: ((totals.payout / (totals.revenue || 1)) * 100).toFixed(1) },
-      { status: 'Period Revenue', count: totals.clicks, mrr: Math.round(totals.revenue), pct: 100 },
-    ];
-  }
-
-  tbody.innerHTML = breakdown.map(r => {
-    const badge = r.status.includes('Payout') || r.status === 'Recurring' || r.status === 'Partnerships Revenue' ? 'green'
-      : r.status.includes('Revenue') || r.status === 'New' || r.status === 'Affiliate Revenue' ? 'blue' : 'red';
-    return `<tr>
-      <td><span class="badge badge-${badge}">${r.status}</span></td>
-      <td>${r.count.toLocaleString()}</td>
-      <td>${r.mrr < 0 ? '-' : ''}$${Math.abs(r.mrr).toLocaleString()}</td>
-      <td>${r.pct}%</td>
-    </tr>`;
-  }).join('');
-}
-
-function renderFeed() {
-  const el = document.getElementById('feedContainer');
-  if (!el || !PARTNER) return;
-
-  let conversions = PARTNER.RECENT_CONVERSIONS;
-
-  // For filtered daily data, show most recent days as feed
-  if (hasDailyData() && currentTimeframe.range !== 'all') {
-    const filtered = filterDailyData();
-    // Show last 10 days in the filtered range
-    const recent = filtered.slice(-10).reverse();
-    conversions = recent.map(d => {
+    tbody.innerHTML = recentDays.map((d, i) => {
       const dt = new Date(d.date + 'T00:00:00');
-      const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const badge = d.payout > 600 ? 'yellow' : d.payout > 400 ? 'green' : 'blue';
-      return {
-        time: dateStr,
-        plan: '$' + d.payout.toFixed(2) + ' payout',
-        source: d.conversions + ' conversions from ' + d.clicks + ' clicks',
-        badge: badge,
-      };
-    });
-  }
+      const dateStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      const convRate = d.clicks > 0 ? ((d.conversions / d.clicks) * 100).toFixed(1) : '0.0';
+      const payoutFormatted = d.payout.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-  el.innerHTML = conversions.map(r => `
-    <div class="feed-item">
-      <div class="feed-dot"></div>
-      <div class="feed-info">
-        <strong>New conversion</strong> — <span class="feed-plan"><span class="badge badge-${r.badge}">${r.plan}</span></span>
-        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">from "${r.source}"</div>
-      </div>
-      <span class="feed-time">${r.time}</span>
-    </div>
-  `).join('');
+      // Color-code payout
+      let badgeClass = 'badge-blue';
+      if (d.payout >= 700) badgeClass = 'badge-green';
+      else if (d.payout >= 500) badgeClass = 'badge-blue';
+      else badgeClass = 'badge-yellow';
+
+      // Highlight today's row
+      const isToday = i === 0;
+      const rowClass = isToday ? ' class="row-today"' : '';
+
+      return '<tr' + rowClass + '>' +
+        '<td><strong>' + dateStr + '</strong>' + (isToday ? ' <span class="badge badge-green" style="margin-left:6px;font-size:10px">Today</span>' : '') + '</td>' +
+        '<td>' + d.clicks.toLocaleString() + '</td>' +
+        '<td><strong>' + d.conversions.toLocaleString() + '</strong></td>' +
+        '<td>' + convRate + '%</td>' +
+        '<td><span class="badge ' + badgeClass + '">$' + payoutFormatted + '</span></td>' +
+      '</tr>';
+    }).join('');
+  } else {
+    // Fallback to static RECENT_CONVERSIONS
+    const conversions = PARTNER.RECENT_CONVERSIONS || [];
+    tbody.innerHTML = conversions.map(r => {
+      return '<tr>' +
+        '<td><strong>' + r.time + '</strong></td>' +
+        '<td>—</td>' +
+        '<td>' + r.plan + '</td>' +
+        '<td>—</td>' +
+        '<td><span class="badge badge-' + r.badge + '">' + r.source + '</span></td>' +
+      '</tr>';
+    }).join('');
+  }
 }
 
 // ---------- Sort ----------
@@ -864,7 +977,7 @@ function exportCSV(tableId, filename) {
     const cells = [];
     tr.querySelectorAll('th, td').forEach(td => {
       let text = td.textContent.trim().replace(/"/g, '""');
-      cells.push(`"${text}"`);
+      cells.push('"' + text + '"');
     });
     rows.push(cells.join(','));
   });
@@ -878,15 +991,14 @@ function exportCSV(tableId, filename) {
 }
 
 // ============================================================
-//  MASTER RENDER — called on timeframe change & theme toggle
+//  MASTER RENDER
 // ============================================================
 
 function renderAllDashboard() {
   renderKPIs();
   renderCharts();
   renderLinkTable(currentSort.key, currentSort.dir);
-  renderCustomerTable();
-  renderFeed();
+  renderRecentConversions();
 }
 
 // ============================================================
@@ -940,7 +1052,7 @@ function generateLink() {
   const short = document.getElementById('shortPreview');
   if (short) {
     const hash = btoa(fullUrl).slice(0, 6);
-    short.textContent = `Short link: vdiq.co/${hash}`;
+    short.textContent = 'Short link: vdiq.co/' + hash;
   }
 
   return fullUrl;
@@ -982,15 +1094,14 @@ function loadHistory() {
   el.innerHTML = history.slice(0, 20).map(h => {
     const d = new Date(h.date);
     const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    return `
-      <div class="link-history-item">
-        <div>
-          <div style="font-weight:600">${h.campaign}</div>
-          <div class="link-meta">${h.platform} · ${dateStr}</div>
-          <div style="font-size:11px;color:var(--green-dark);word-break:break-all;margin-top:2px">${h.url}</div>
-        </div>
-        <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${h.url.replace(/'/g, "\\'")}');showToast('Copied!')">Copy</button>
-      </div>`;
+    return '<div class="link-history-item">' +
+      '<div>' +
+        '<div style="font-weight:600">' + h.campaign + '</div>' +
+        '<div class="link-meta">' + h.platform + ' · ' + dateStr + '</div>' +
+        '<div style="font-size:11px;color:var(--green-dark);word-break:break-all;margin-top:2px">' + h.url + '</div>' +
+      '</div>' +
+      '<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(\'' + h.url.replace(/'/g, "\\'") + '\');showToast(\'Copied!\')">Copy</button>' +
+    '</div>';
   }).join('');
 }
 
@@ -1021,7 +1132,7 @@ function generateBulk() {
     if (campaign) params.set('utm_campaign', campaign.toLowerCase().replace(/\s+/g, '_'));
     params.set('utm_content', title.toLowerCase().replace(/\s+/g, '_'));
     const url = base + '?' + params.toString();
-    return `<div class="link-output"><code>${url}</code><button class="copy-btn" onclick="navigator.clipboard.writeText('${url.replace(/'/g, "\\'")}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button></div>`;
+    return '<div class="link-output"><code>' + url + '</code><button class="copy-btn" onclick="navigator.clipboard.writeText(\'' + url.replace(/'/g, "\\'") + '\');this.textContent=\'Copied!\';setTimeout(()=>this.textContent=\'Copy\',1500)">Copy</button></div>';
   }).join('');
 }
 
@@ -1037,7 +1148,6 @@ function copyAllBulk() {
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Load partner config
   if (typeof getPartnerConfig === 'function') {
     PARTNER = getPartnerConfig();
     console.log('[vidIQ] Partner loaded:', PARTNER?.name, PARTNER?.slug);
@@ -1054,8 +1164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTimeframeUI();
     renderCharts();
     renderLinkTable();
-    renderCustomerTable();
-    renderFeed();
+    renderRecentConversions();
     initSortHeaders();
   }
 

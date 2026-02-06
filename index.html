@@ -150,15 +150,8 @@
       </div>
     </div>
 
-    <!-- Charts Row 2 -->
-    <div class="charts-grid">
-      <div class="chart-card animate-in">
-        <h3>
-          Conversion Funnel
-          <span style="font-size:12px;color:var(--text-muted);font-weight:500">All time</span>
-        </h3>
-        <div id="funnelContainer" class="funnel"></div>
-      </div>
+    <!-- Top Converting Content -->
+    <div class="charts-grid charts-grid-single">
       <div class="chart-card animate-in">
         <h3>
           Top Converting Content
@@ -199,44 +192,31 @@
       </div>
     </div>
 
-    <!-- Two-col: Customer Breakdown + Recent Feed -->
-    <div class="charts-grid">
-      <!-- Customer Breakdown -->
-      <div class="table-section animate-in" style="margin-bottom:0">
-        <div class="table-header">
-          <h3>Customer Breakdown</h3>
-          <button class="btn btn-ghost btn-sm" onclick="exportCSV('customerTable','vidiq-customers.csv')">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Export CSV
-          </button>
-        </div>
-        <div class="table-wrap">
-          <table id="customerTable">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Count</th>
-                <th>MRR Contribution</th>
-                <th>% of Total</th>
-              </tr>
-            </thead>
-            <tbody id="customerTableBody"></tbody>
-          </table>
-        </div>
+    <!-- Recent Conversions (Daily) -->
+    <div class="table-section animate-in">
+      <div class="table-header">
+        <h3>
+          Recent Conversions
+          <span style="font-size:12px;color:var(--text-muted);font-weight:500;margin-left:8px">Daily breakdown</span>
+        </h3>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV('recentConversionsTable','vidiq-recent-conversions.csv')">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
       </div>
-
-      <!-- Recent Conversions Feed -->
-      <div class="table-section animate-in" style="margin-bottom:0">
-        <div class="table-header">
-          <h3>
-            Recent Conversions
-            <span style="display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:var(--green);font-weight:600">
-              <span style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite"></span>
-              Live
-            </span>
-          </h3>
-        </div>
-        <div class="feed" id="feedContainer"></div>
+      <div class="table-wrap">
+        <table id="recentConversionsTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Clicks</th>
+              <th>Conversions</th>
+              <th>Conv. Rate</th>
+              <th>Payout</th>
+            </tr>
+          </thead>
+          <tbody id="recentConversionsBody"></tbody>
+        </table>
       </div>
     </div>
 
@@ -244,7 +224,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    Powered by <a href="https://vidiq.com">vidIQ</a> · Partner Program &copy; 2025 · All data is for demonstration purposes
+    Powered by <a href="https://vidiq.com">vidIQ</a> · Partner Program &copy; 2026
   </footer>
 
 </div><!-- /main -->
