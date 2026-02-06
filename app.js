@@ -5,6 +5,32 @@
 // ---------- Active partner (set on DOMContentLoaded) ----------
 let PARTNER = null;
 
+// Fallback partner when partners-data.js hasn't loaded
+function buildDefaultPartner() {
+  const slug = new URLSearchParams(window.location.search).get('partner') || 'yourivanhofwegen';
+  return {
+    name: slug.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/^./, s => s.toUpperCase()),
+    initials: slug.substring(0, 2).toUpperCase(),
+    slug: slug,
+    url: 'vidiq.com/' + slug,
+    baseUrl: 'https://vidiq.com/' + slug,
+    kpi: {
+      totalEarnings: { value: '$—', change: '—', direction: 'up' },
+      thisMonth: { value: '$—', change: '—', direction: 'up' },
+      activeSubs: { value: '—', change: '—', direction: 'up' },
+      newSignups: { value: '—', change: '—', direction: 'up' },
+      conversionRate: { value: '—', change: '—', direction: 'up' },
+      churnRate: { value: '—', change: '—', direction: 'down' },
+    },
+    monthlyEarnings: [],
+    newRevenue: [],
+    recurringRevenue: [],
+    funnel: { clicks: 0, signups: 0, trial: 0, paid: 0, retained: 0 },
+    links: [],
+    customers: { recurring: { count: 0, mrr: 0 }, new: { count: 0, mrr: 0 }, churned: { count: 0, mrr: 0 } },
+  };
+}
+
 // ---------- Theme ----------
 function initTheme() {
   const saved = localStorage.getItem('vidiq-theme') || 'light';
@@ -520,12 +546,19 @@ function copyAllBulk() {
 
 // ---------- Init ----------
 document.addEventListener('DOMContentLoaded', () => {
-  // Load partner config
-  PARTNER = getPartnerConfig();
+  // Load partner config (with fallback if partners-data.js hasn't loaded yet)
+  if (typeof getPartnerConfig === 'function') {
+    PARTNER = getPartnerConfig();
+    console.log('[vidIQ] Partner loaded:', PARTNER?.name, PARTNER?.slug);
+  } else {
+    console.warn('[vidIQ] partners-data.js not loaded, using fallback');
+    PARTNER = buildDefaultPartner();
+  }
 
   initTheme();
 
   // Populate header, KPI, and partner-specific UI
+  console.log('[vidIQ] Populating UI, PARTNER:', !!PARTNER, 'KPI:', !!PARTNER?.kpi);
   populatePartnerUI();
 
   // Dashboard-specific
