@@ -2,6 +2,9 @@
    vidIQ Partner Dashboard — App Logic
    ============================================ */
 
+// ---------- Active partner (set on DOMContentLoaded) ----------
+let PARTNER = null;
+
 // ---------- Theme ----------
 function initTheme() {
   const saved = localStorage.getItem('vidiq-theme') || 'light';
@@ -87,68 +90,71 @@ function chartDefaults() {
   };
 }
 
-// ---------- Mock Data ----------
-const MONTHS = ['Jul \'24','Aug','Sep','Oct','Nov','Dec','Jan \'25','Feb','Mar','Apr','May','Jun'];
-const EARNINGS_DATA = [5200, 5650, 6100, 6400, 6900, 7200, 7500, 7850, 8100, 8350, 8200, 8450];
-const NEW_REV = [1800, 1950, 2100, 2000, 2350, 2400, 2550, 2700, 2800, 2900, 2600, 2750];
-const RECURRING_REV = [3400, 3700, 4000, 4400, 4550, 4800, 4950, 5150, 5300, 5450, 5600, 5700];
+// ---------- Populate Header & KPI from Partner Config ----------
+function populatePartnerUI() {
+  if (!PARTNER) return;
 
-const FUNNEL_DATA = [
-  { label: 'Clicks', value: 135420, color: '#3B82F6' },
-  { label: 'Signups', value: 10320, color: '#8B5CF6' },
-  { label: 'Trial', value: 7850, color: '#F59E0B' },
-  { label: 'Paid', value: 3920, color: '#00C853' },
-  { label: 'Retained', value: 2847, color: '#059669' },
-];
+  // Header: avatar initials
+  const avatar = document.querySelector('.header-right .avatar');
+  if (avatar) avatar.textContent = PARTNER.initials;
 
-const TOP_CONTENT = [
-  { name: 'How to Get More Views on YouTube 2025', conversions: 842 },
-  { name: 'YouTube SEO Tutorial — Complete Guide', conversions: 623 },
-  { name: 'vidIQ Review — Is It Worth It?', conversions: 571 },
-  { name: '10 YouTube Tips for Small Channels', conversions: 498 },
-  { name: 'How I Grew to 100K Subscribers', conversions: 387 },
-  { name: 'Best YouTube Tools for Creators', conversions: 345 },
-  { name: 'YouTube Algorithm Explained 2025', conversions: 312 },
-  { name: 'Keyword Research for YouTube', conversions: 289 },
-];
+  // Header: partner name
+  const nameEl = document.querySelector('.header-right > span');
+  if (nameEl) nameEl.textContent = PARTNER.name;
 
-const LINK_TABLE = [
-  { name: 'How to Get More Views on YouTube 2025', utm: 'youtube', clicks: 28450, signups: 2150, conversions: 842, revenue: 25260 },
-  { name: 'YouTube SEO Tutorial — Complete Guide', utm: 'youtube', clicks: 19200, signups: 1480, conversions: 623, revenue: 18690 },
-  { name: 'vidIQ Review — Is It Worth It?', utm: 'youtube', clicks: 15800, signups: 1320, conversions: 571, revenue: 17130 },
-  { name: '10 YouTube Tips for Small Channels', utm: 'youtube', clicks: 14600, signups: 1100, conversions: 498, revenue: 14940 },
-  { name: 'How I Grew to 100K Subscribers', utm: 'youtube', clicks: 12300, signups: 950, conversions: 387, revenue: 11610 },
-  { name: 'Best YouTube Tools for Creators', utm: 'website', clicks: 10200, signups: 780, conversions: 345, revenue: 10350 },
-  { name: 'YouTube Algorithm Explained 2025', utm: 'tiktok', clicks: 9800, signups: 710, conversions: 312, revenue: 9360 },
-  { name: 'Keyword Research for YouTube', utm: 'instagram', clicks: 8400, signups: 620, conversions: 289, revenue: 8670 },
-  { name: 'Channel Audit Live Stream', utm: 'youtube', clicks: 6200, signups: 480, conversions: 198, revenue: 5940 },
-  { name: 'Shorts vs Long-form — What Works?', utm: 'youtube', clicks: 5800, signups: 410, conversions: 175, revenue: 5250 },
-  { name: 'Instagram → YouTube Funnel Guide', utm: 'instagram', clicks: 4620, signups: 320, conversions: 80, revenue: 2433 },
-];
+  // Header: partner URL text
+  const urlEl = document.querySelector('.partner-url');
+  if (urlEl) {
+    // Keep the SVG, replace just the text node
+    const textNodes = Array.from(urlEl.childNodes).filter(n => n.nodeType === Node.TEXT_NODE);
+    textNodes.forEach(n => n.remove());
+    urlEl.appendChild(document.createTextNode('\n        ' + PARTNER.url + '\n      '));
+  }
 
-const CUSTOMER_BREAKDOWN = [
-  { status: 'Recurring', count: 2274, mrr: 68220, pct: 79.9 },
-  { status: 'New', count: 573, mrr: 17190, pct: 20.1 },
-  { status: 'Churned', count: 91, mrr: -2730, pct: 3.2 },
-];
+  // Page title
+  document.title = PARTNER.name + ' — vidIQ Partner Dashboard';
 
-const RECENT_CONVERSIONS = [
-  { time: '2 min ago', plan: 'Pro Monthly', source: 'YouTube SEO Tutorial', badge: 'green' },
-  { time: '8 min ago', plan: 'Boost Annual', source: 'How to Get More Views 2025', badge: 'blue' },
-  { time: '14 min ago', plan: 'Pro Monthly', source: 'vidIQ Review — Is It Worth It?', badge: 'green' },
-  { time: '23 min ago', plan: 'Max Annual', source: '10 YouTube Tips for Small Channels', badge: 'yellow' },
-  { time: '31 min ago', plan: 'Pro Monthly', source: 'Best YouTube Tools for Creators', badge: 'green' },
-  { time: '45 min ago', plan: 'Boost Monthly', source: 'YouTube Algorithm Explained 2025', badge: 'blue' },
-  { time: '1 hr ago', plan: 'Pro Annual', source: 'How I Grew to 100K Subscribers', badge: 'green' },
-  { time: '1 hr ago', plan: 'Pro Monthly', source: 'Keyword Research for YouTube', badge: 'green' },
-  { time: '2 hr ago', plan: 'Max Monthly', source: 'Channel Audit Live Stream', badge: 'yellow' },
-  { time: '2 hr ago', plan: 'Boost Annual', source: 'Shorts vs Long-form — What Works?', badge: 'blue' },
-];
+  // KPI cards
+  const kpiGrid = document.querySelector('.kpi-grid');
+  if (kpiGrid && PARTNER.kpi) {
+    const kpiOrder = ['totalEarnings', 'thisMonth', 'activeSubs', 'newSignups', 'conversionRate', 'churnRate'];
+    const kpiLabels = {
+      totalEarnings: 'Total Earnings',
+      thisMonth: 'This Month',
+      activeSubs: 'Active Subscribers',
+      newSignups: 'New Signups',
+      conversionRate: 'Conversion Rate',
+      churnRate: 'Churn Rate',
+    };
+    kpiGrid.innerHTML = kpiOrder.map(key => {
+      const k = PARTNER.kpi[key];
+      if (!k) return '';
+      const colorStyle = k.color ? ` style="color:${k.color}"` : '';
+      return `<div class="kpi-card animate-in">
+        <div class="kpi-label">${kpiLabels[key]}</div>
+        <div class="kpi-value"${colorStyle}>${k.value}</div>
+        <div class="kpi-change ${k.direction}">${k.change}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Sidebar nav: preserve partner param on links
+  const slug = getPartnerSlug();
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (href && href !== '#' && !href.startsWith('http')) {
+      const base = href.split('?')[0];
+      a.setAttribute('href', base + '?partner=' + slug);
+    }
+  });
+}
 
 // ---------- Render Charts ----------
 let chartInstances = {};
 
 function renderCharts() {
+  if (!PARTNER) return;
+
   // Destroy existing
   Object.values(chartInstances).forEach(c => c.destroy());
   chartInstances = {};
@@ -162,10 +168,10 @@ function renderCharts() {
     chartInstances.earnings = new Chart(ctx1.getContext('2d'), {
       type: 'line',
       data: {
-        labels: MONTHS,
+        labels: PARTNER.MONTHS,
         datasets: [{
           label: 'Monthly Earnings ($)',
-          data: EARNINGS_DATA,
+          data: PARTNER.EARNINGS_DATA,
           borderColor: '#00C853',
           backgroundColor: 'rgba(0,200,83,.08)',
           borderWidth: 2.5,
@@ -199,10 +205,10 @@ function renderCharts() {
     chartInstances.revenue = new Chart(ctx2.getContext('2d'), {
       type: 'bar',
       data: {
-        labels: MONTHS,
+        labels: PARTNER.MONTHS,
         datasets: [
-          { label: 'New Revenue', data: NEW_REV, backgroundColor: '#3B82F6', borderRadius: 4, barPercentage: .65 },
-          { label: 'Recurring Revenue', data: RECURRING_REV, backgroundColor: '#00C853', borderRadius: 4, barPercentage: .65 },
+          { label: 'New Revenue', data: PARTNER.NEW_REV, backgroundColor: '#3B82F6', borderRadius: 4, barPercentage: .65 },
+          { label: 'Recurring Revenue', data: PARTNER.RECURRING_REV, backgroundColor: '#00C853', borderRadius: 4, barPercentage: .65 },
         ]
       },
       options: {
@@ -224,15 +230,15 @@ function renderCharts() {
   const ctx4 = document.getElementById('contentChart');
   if (ctx4) {
     const defs = chartDefaults();
-    const labels = TOP_CONTENT.map(d => d.name.length > 30 ? d.name.slice(0, 30) + '…' : d.name);
+    const labels = PARTNER.TOP_CONTENT.map(d => d.name.length > 30 ? d.name.slice(0, 30) + '…' : d.name);
     chartInstances.content = new Chart(ctx4.getContext('2d'), {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [{
           label: 'Conversions',
-          data: TOP_CONTENT.map(d => d.conversions),
-          backgroundColor: TOP_CONTENT.map((_, i) => {
+          data: PARTNER.TOP_CONTENT.map(d => d.conversions),
+          backgroundColor: PARTNER.TOP_CONTENT.map((_, i) => {
             const colors = ['#00C853','#00A344','#059669','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
             return colors[i % colors.length];
           }),
@@ -255,11 +261,11 @@ function renderCharts() {
 
 function renderFunnel() {
   const el = document.getElementById('funnelContainer');
-  if (!el) return;
-  const max = FUNNEL_DATA[0].value;
-  el.innerHTML = FUNNEL_DATA.map((d, i) => {
+  if (!el || !PARTNER) return;
+  const max = PARTNER.FUNNEL_DATA[0].value;
+  el.innerHTML = PARTNER.FUNNEL_DATA.map((d, i) => {
     const pct = (d.value / max * 100).toFixed(1);
-    const convRate = i === 0 ? '100%' : (d.value / FUNNEL_DATA[i - 1].value * 100).toFixed(1) + '%';
+    const convRate = i === 0 ? '100%' : (d.value / PARTNER.FUNNEL_DATA[i - 1].value * 100).toFixed(1) + '%';
     return `
       <div class="funnel-step animate-in" style="animation-delay:${i * .1}s">
         <span class="funnel-label">${d.label}</span>
@@ -274,9 +280,9 @@ function renderFunnel() {
 // ---------- Tables ----------
 function renderLinkTable(sortKey = 'conversions', sortDir = 'desc') {
   const tbody = document.getElementById('linkTableBody');
-  if (!tbody) return;
+  if (!tbody || !PARTNER) return;
 
-  const sorted = [...LINK_TABLE].sort((a, b) => {
+  const sorted = [...PARTNER.LINK_TABLE].sort((a, b) => {
     const va = a[sortKey], vb = b[sortKey];
     if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
     return sortDir === 'asc' ? va - vb : vb - va;
@@ -298,8 +304,8 @@ function renderLinkTable(sortKey = 'conversions', sortDir = 'desc') {
 
 function renderCustomerTable() {
   const tbody = document.getElementById('customerTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = CUSTOMER_BREAKDOWN.map(r => {
+  if (!tbody || !PARTNER) return;
+  tbody.innerHTML = PARTNER.CUSTOMER_BREAKDOWN.map(r => {
     const badge = r.status === 'Recurring' ? 'green' : r.status === 'New' ? 'blue' : 'red';
     return `<tr>
       <td><span class="badge badge-${badge}">${r.status}</span></td>
@@ -312,8 +318,8 @@ function renderCustomerTable() {
 
 function renderFeed() {
   const el = document.getElementById('feedContainer');
-  if (!el) return;
-  el.innerHTML = RECENT_CONVERSIONS.map(r => `
+  if (!el || !PARTNER) return;
+  el.innerHTML = PARTNER.RECENT_CONVERSIONS.map(r => `
     <div class="feed-item">
       <div class="feed-dot"></div>
       <div class="feed-info">
@@ -376,6 +382,13 @@ function initGenerator() {
   const form = document.getElementById('utmForm');
   if (!form) return;
 
+  // Set the base URL from partner config
+  const baseUrlInput = document.getElementById('baseUrl');
+  if (baseUrlInput && PARTNER) {
+    baseUrlInput.value = PARTNER.baseUrl;
+    baseUrlInput.placeholder = PARTNER.baseUrl;
+  }
+
   const fields = ['baseUrl', 'platform', 'campaign', 'content'];
   fields.forEach(id => {
     const el = document.getElementById(id);
@@ -388,7 +401,8 @@ function initGenerator() {
 }
 
 function generateLink() {
-  const base = document.getElementById('baseUrl')?.value?.trim() || 'https://vidiq.com/yourivanhofwegen';
+  const defaultBase = PARTNER ? PARTNER.baseUrl : 'https://vidiq.com/yourivanhofwegen';
+  const base = document.getElementById('baseUrl')?.value?.trim() || defaultBase;
   const platform = document.getElementById('platform')?.value || 'youtube';
   const campaign = document.getElementById('campaign')?.value?.trim() || '';
   const content = document.getElementById('content')?.value?.trim() || '';
@@ -480,7 +494,8 @@ function generateBulk() {
   const titles = textarea.value.split('\n').map(t => t.trim()).filter(Boolean);
   if (titles.length === 0) { output.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Enter video titles above (one per line).</p>'; return; }
 
-  const base = document.getElementById('baseUrl')?.value?.trim() || 'https://vidiq.com/yourivanhofwegen';
+  const defaultBase = PARTNER ? PARTNER.baseUrl : 'https://vidiq.com/yourivanhofwegen';
+  const base = document.getElementById('baseUrl')?.value?.trim() || defaultBase;
   const platform = document.getElementById('platform')?.value || 'youtube';
   const campaign = document.getElementById('campaign')?.value?.trim() || '';
   const platformMedium = { youtube: 'video', tiktok: 'video', instagram: 'social', twitter: 'social', linkedin: 'social', website: 'referral', other: 'referral' };
@@ -505,7 +520,13 @@ function copyAllBulk() {
 
 // ---------- Init ----------
 document.addEventListener('DOMContentLoaded', () => {
+  // Load partner config
+  PARTNER = getPartnerConfig();
+
   initTheme();
+
+  // Populate header, KPI, and partner-specific UI
+  populatePartnerUI();
 
   // Dashboard-specific
   if (document.getElementById('earningsChart')) {

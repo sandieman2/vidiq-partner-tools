@@ -75,49 +75,19 @@
     <div class="header-right">
       <div class="partner-url">
         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        vidiq.com/yourivanhofwegen
+        Loading...
       </div>
       <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode"></button>
-      <div class="avatar">YV</div>
-      <span style="font-weight:600;font-size:14px">Youri Van Hof Wegen</span>
+      <div class="avatar">...</div>
+      <span style="font-weight:600;font-size:14px">Loading...</span>
     </div>
   </header>
 
   <!-- Content -->
   <div class="content">
 
-    <!-- KPI Cards -->
+    <!-- KPI Cards (populated dynamically by app.js from partner config) -->
     <div class="kpi-grid">
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">Total Earnings</div>
-        <div class="kpi-value" style="color:var(--green)">$100,632<span style="font-size:16px">.85</span></div>
-        <div class="kpi-change up">↑ 18.2% all time</div>
-      </div>
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">This Month</div>
-        <div class="kpi-value">$8,450<span style="font-size:16px">.00</span></div>
-        <div class="kpi-change up">↑ 3.0% vs last month</div>
-      </div>
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">Active Subscribers</div>
-        <div class="kpi-value">2,847</div>
-        <div class="kpi-change up">↑ 124 this month</div>
-      </div>
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">New Signups</div>
-        <div class="kpi-value">573</div>
-        <div class="kpi-change up">↑ 8.5% vs last month</div>
-      </div>
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">Conversion Rate</div>
-        <div class="kpi-value">7.6%</div>
-        <div class="kpi-change up">↑ 0.3pp vs last month</div>
-      </div>
-      <div class="kpi-card animate-in">
-        <div class="kpi-label">Churn Rate</div>
-        <div class="kpi-value" style="color:var(--danger)">3.2%</div>
-        <div class="kpi-change down">↑ 0.1pp vs last month</div>
-      </div>
     </div>
 
     <!-- Charts Row 1 -->
@@ -242,6 +212,7 @@
 </div><!-- /main -->
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="partners-data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
