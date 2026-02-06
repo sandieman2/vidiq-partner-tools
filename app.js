@@ -491,17 +491,18 @@ function renderStaticKPIs(kpiGrid) {
   const kpiLabels = {
     totalEarnings: 'Total Earnings',
     thisMonth: 'This Month',
-    activeSubs: 'Active Subscribers',
-    newSignups: 'New Signups',
+    activeSubs: 'Total Conversions',
+    newSignups: 'Conversions This Month',
     conversionRate: 'Conversion Rate',
-    churnRate: 'Churn Rate',
+    churnRate: 'Overall Conv. Rate',
   };
   kpiGrid.innerHTML = kpiOrder.map(key => {
     const k = PARTNER.kpi[key];
     if (!k) return '';
     const colorStyle = k.color ? ` style="color:${k.color}"` : '';
+    const label = k.label || kpiLabels[key];
     return `<div class="kpi-card animate-in">
-      <div class="kpi-label">${kpiLabels[key]}</div>
+      <div class="kpi-label">${label}</div>
       <div class="kpi-value"${colorStyle}>${k.value}</div>
       <div class="kpi-change ${k.direction}">${k.change}</div>
     </div>`;
