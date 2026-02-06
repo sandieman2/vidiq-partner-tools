@@ -168,7 +168,7 @@ a:hover { color: var(--green-bright); }
   background: rgba(255,255,255,.85);
 }
 [data-theme="dark"] .header {
-  background: rgba(17,24,39,.85);
+  background: rgba(13,17,23,.85);
 }
 .header-left { display: flex; align-items: center; gap: 16px; }
 .header-left h1 {
